@@ -32,8 +32,9 @@ defmodule EctoAudit.Auditable do
       def track({:ok, record}) do
         render_existing_record_inactive
         insert_new_audit_record(record)
-        record
+        {:ok, record}
       end
+      def track(error), do: error
 
       defp render_existing_record_inactive do
         from(a in audit_module, where: a.inactive_at == ^EctoAudit.Auditable.eot)
