@@ -6,7 +6,7 @@ defmodule EctoAudit.Auditable do
 
       def audit_module, do: Module.concat(["#{__MODULE__}Audit"])
       def auditable_record_id do
-        "#{__MODULE__ |> Module.split |> List.last }_id"
+        "#{__MODULE__ |> Module.split |> List.last |> EctoAudit.Utils.underscore}_id"
         |> String.downcase
         |> String.to_atom
       end
