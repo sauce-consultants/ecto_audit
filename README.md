@@ -1,8 +1,7 @@
 # EctoAudit
 
-Ecto extension to support auditing data changes in your Schema.
+Ecto extensions to support auditing data changes in your Schema.
 
-** NOTE: The process around this is a little convoluted at the moment. Very much WIP. **
 
 ## Installation
 
@@ -11,48 +10,81 @@ Add EctoAudit as a dependency in your `mix.exs` file.
 ```
 defp deps do
   [
-    {:ecto_audit, "~> 0.0.1"}
+    {:ecto_audit, "~> 0.1.0"}
   ]
 end
 ```
 
-After you are done, run mix deps.get in your shell to fetch the dependencies.
+After you are done, run `mix deps.get` to fetch the dependencies.
+
+## TODO
+
+ - [] Add mix commands to automate adding the Migration/Schema files
 
 ## Usage
 
-In each Ecto Schema you wish to audit, add the following line:
+### Update your Repo
 
-```
-defmodule User do
-  use Ecto.Model
-  use EctoAudit.Auditable, repo: YourApp.Repo # << This line required for each Schema to be audited.
+Add the line `use EctoAudit.Repo` to your Ecto Repo file to import the EctoAudit functionality to your project.
 
-  schema "users" do
-    field :first_name, :string
-    field :last_name, :string
-    field :submitted_by, :integer
-
-    timestamps
-  end
+```elixir
+defmodule MyApp.Repo do
+  use Ecto.Repo, otp_app: :my_app
+  use EctoAudit.Repo
 end
 ```
 
-Then, create a corresponding "Audit" schema containing the fields to be tracked from the "main" schema. This must also have `*_id`, `effective_at` and `inactive_at` fields to aid with the auditing process.
+### Add Migrations for each auditable schema
+
+The following migration is required to store the changes to your schema. In this example the Schema is called "people", but you will need to update this to reflect the name of the schema you wish to keep track of.
+
+```elixir
+defmodule MyApp.Repo.Migrations.CreateUserHistory do
+  use Ecto.Migration
+
+  def change do
+    create table(:users_history) do
+      add :user_id, :integer
+      add :changes, :map
+      add :committed_by, :integer
+      add :committed_at, :utc_datetime
+
+      timestamps()
+    end
+
+  end
+end
 
 ```
-defmodule UserAudit do
-  use Ecto.Model
 
-  schema "users" do
-    field :first_name, :string
-    field :last_name, :string
-    field :submitted_by, :integer
+### Add History Schema for each auditable schema
 
+As per the migration above, a schema similar to the following will be required for each auditable schema.
+
+```elixir
+defmodule MyApp.UserHistory do
+  use Ecto.Schema
+  import Ecto.Changeset
+  alias MyApp.UserHistory
+
+  schema "users_history" do
     field :user_id, :integer
-    field :effective_at, Ecto.DateTime
-    field :inactive_at, Ecto.DateTime
+    field :changes, :map
+    field :committed_at, :utc_datetime
+    field :committed_by, :integer
+
+    timestamps()
+  end
+
+  @doc false
+  def changeset(%UserHistory{} = user_history, attrs) do
+    user_history
+    |> cast(attrs, [:user_id, :changes, :committed_by, :committed_at])
+    |> validate_required([:user_id, :changes, :committed_by, :committed_at])
   end
 end
 ```
 
-Finally, when performing Inserts, Updates or Deletes to the primary schema replace `Repo.{insert|update|delete}` with `User.{insert|update|delete}`.
+### Perform audited Inserts / Updates
+
+To audit the inserts / updates in project you can now use the `Repo.audited_insert` and `Repo.audited_update` functions. These will both perform inserts/updates as normal but will also insert a log of the changes (and the user who made them) to the `_history` tables created earlier.
