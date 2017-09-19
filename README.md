@@ -19,7 +19,7 @@ After you are done, run `mix deps.get` to fetch the dependencies.
 
 ## TODO
 
- - [] Add mix commands to automate adding the Migration/Schema files
+[ ] Add mix commands to automate adding the Migration/Schema files
 
 ## Usage
 
