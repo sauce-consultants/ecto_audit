@@ -31,7 +31,7 @@ defmodule EctoAudit.Mixfile do
   defp package do
     [maintainers: ["Matt Weldon"],
      licenses: ["MIT"],
-     links: %{"GitHub" => "https://github.com/mattweldon/ecto_audit"}]
+     links: %{"GitHub" => "https://github.com/sauce-consultants/ecto_audit"}]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -51,7 +51,8 @@ defmodule EctoAudit.Mixfile do
     [
       {:postgrex, ">= 0.0.0"},
       {:ecto, "~> 2.1"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
 
