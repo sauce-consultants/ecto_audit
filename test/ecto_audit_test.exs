@@ -74,4 +74,13 @@ defmodule EctoAuditTest do
 		assert user
 		assert Repo.all(EctoAuditTest.UserHistory) |> Enum.count == 3
   end
+
+  test "receiving a validation error when inserting a user" do
+  	{:error, changeset} =
+	  	%EctoAuditTest.User{}
+	  	|> EctoAuditTest.User.changeset(%{})
+			|> Repo.audited_insert(1)
+
+		assert changeset
+  end
 end

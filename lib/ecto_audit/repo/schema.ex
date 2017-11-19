@@ -20,7 +20,7 @@ defmodule EctoAudit.Repo.Schema do
   """
   def audited_update(repo, changeset, user_id, opts \\ []) do
 		begin_transaction
-		|> save_changeset(changeset, :update)
+    |> save_changeset(changeset, :update)
 		|> audit_changes(repo, changeset, user_id)
 		|> commit_transaction(repo)
   end
@@ -75,8 +75,10 @@ defmodule EctoAudit.Repo.Schema do
 		|> repo.transaction
 		|> case do
 			{:ok, %{save: record}} ->
-				{:ok, record}
-			otherwise ->
+        {:ok, record}
+      {:error, step, changeset, _} ->
+        {:error, changeset}
+      otherwise ->
 				otherwise
 		end
 	end
