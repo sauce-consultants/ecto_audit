@@ -6,6 +6,7 @@ defmodule EctoAudit.Test.Repo.Migrations do
       add :name, :string
       add :email, :string
       add :postcode, :string
+      add :password, :string
       
       timestamps()
     end

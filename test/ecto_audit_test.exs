@@ -13,7 +13,8 @@ defmodule EctoAuditTest do
 	  schema "users" do
 	    field :email, :string
 	    field :name, :string
-	    field :postcode, :string
+      field :postcode, :string
+      field :password, :string
 
 	    timestamps()
 	  end
@@ -21,7 +22,7 @@ defmodule EctoAuditTest do
 	  @doc false
 	  def changeset(%EctoAuditTest.User{} = user, attrs) do
 	    user
-	    |> cast(attrs, [:name, :email, :postcode])
+	    |> cast(attrs, [:name, :email, :postcode, :password])
 	    |> validate_required([:name, :email, :postcode])
 	  end
 	end
@@ -53,13 +54,17 @@ defmodule EctoAuditTest do
 	#
 
 
-  @valid_params %{email: "test@test.com", name: "Tommy Tester", postcode: "HU1 1UU"}
+  @valid_params %{email: "test@test.com", name: "Tommy Tester", postcode: "HU1 1UU", password: "password"}
 
   test "inserting a user" do
   	{:ok, user} =
 	  	%EctoAuditTest.User{}
 	  	|> EctoAuditTest.User.changeset(@valid_params)
 			|> Repo.audited_insert(1)
+
+    user_history = Repo.all(EctoAuditTest.UserHistory) |> List.first
+
+    assert user_history.changes["password"] == "******"
 
 		{:ok, user} =
 	  	user
@@ -68,11 +73,18 @@ defmodule EctoAuditTest do
 
 		{:ok, user} =
 	  	user
-	  	|> EctoAuditTest.User.changeset(%{postcode: "HU2 2EE"})
+	  	|> EctoAuditTest.User.changeset(%{postcode: "HU2 2EE", password: "anotherpassword"})
 			|> Repo.audited_update(1)
 
 		assert user
-		assert Repo.all(EctoAuditTest.UserHistory) |> Enum.count == 3
+    
+    user_histories = Repo.all(EctoAuditTest.UserHistory)
+
+    user_history = user_histories |> List.last
+
+    assert user_history.changes["password"] == "******"
+    
+    assert user_histories |> Enum.count == 3
   end
 
   test "receiving a validation error when inserting a user" do
